@@ -416,7 +416,7 @@ public abstract class PullToRefreshAdapterViewBase<T extends AbsListView> extend
 	private boolean isFirstItemVisible() {
 		final Adapter adapter = mRefreshableView.getAdapter();
 
-		if (null == adapter || adapter.isEmpty()) {
+		if (null == adapter) {
 			if (DEBUG) {
 				Log.d(LOG_TAG, "isFirstItemVisible. Empty View.");
 			}
@@ -445,7 +445,7 @@ public abstract class PullToRefreshAdapterViewBase<T extends AbsListView> extend
 	private boolean isLastItemVisible() {
 		final Adapter adapter = mRefreshableView.getAdapter();
 
-		if (null == adapter || adapter.isEmpty()) {
+		if (null == adapter) {
 			if (DEBUG) {
 				Log.d(LOG_TAG, "isLastItemVisible. Empty View.");
 			}

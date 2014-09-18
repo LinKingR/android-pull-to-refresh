@@ -315,7 +315,7 @@ public abstract class LoadingLayout extends FrameLayout implements ILoadingLayou
 		}
 	}
 
-	public final void hideAllViews() {
+	public void hideAllViews() {
 		hideHeaderText();
 		hideHeaderProgress();
 		hideHeaderImage();
@@ -451,7 +451,7 @@ public abstract class LoadingLayout extends FrameLayout implements ILoadingLayou
 		}
 	}
 
-	public final void showInvisibleViews() {
+	public void showInvisibleViews() {
 		showHeaderText();
 		showHeaderProgress();
 		showHeaderImage();

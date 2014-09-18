@@ -22,6 +22,7 @@ import android.graphics.drawable.Drawable;
 import android.os.Build.VERSION;
 import android.os.Build.VERSION_CODES;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.Parcelable;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -396,7 +397,12 @@ public abstract class PullToRefreshBase<T extends View> extends LinearLayout imp
 	@Override
 	public final void onRefreshComplete() {
 		if (isRefreshing()) {
-			setState(State.RESET);
+            new Handler().postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    setState(State.RESET);
+                }
+            }, 500);
 		}
 	}
 
@@ -1094,63 +1100,68 @@ public abstract class PullToRefreshBase<T extends View> extends LinearLayout imp
 	 * Re-measure the Loading Views height, and adjust internal padding as
 	 * necessary
 	 */
-	protected final void refreshLoadingViewsSize() {
-		final int maximumPullScroll = (int) (getMaximumPullScroll() * 1.2f);
+    protected final void refreshLoadingViewsSize() {
+        int pLeft = getPaddingLeft();
+        int pTop = getPaddingTop();
+        int pRight = getPaddingRight();
+        int pBottom = getPaddingBottom();
 
-		int pLeft = getPaddingLeft();
-		int pTop = getPaddingTop();
-		int pRight = getPaddingRight();
-		int pBottom = getPaddingBottom();
+        switch (getPullToRefreshScrollDirection()) {
+            case HORIZONTAL:
+                if (mMode.showHeaderLoadingLayout()) {
+                    measureView(mHeaderLayout);
+                    pLeft = -mHeaderLayout.getMeasuredWidth();
+                } else {
+                    pLeft = 0;
+                }
 
-		switch (getFilteredPullToRefreshScrollDirection()) {
-			case HORIZONTAL:
-				if (mMode.showHeaderLoadingLayout()) {
-					mHeaderLayout.setWidth(maximumPullScroll);
-					pLeft = -maximumPullScroll;
-				} else {
-					pLeft = 0;
-				}
+                if (mMode.showFooterLoadingLayout()) {
+                    measureView(mFooterLayout);
+                    pRight = -mFooterLayout.getMeasuredWidth();
+                } else {
+                    pRight = 0;
+                }
+                break;
 
-				if (mMode.showFooterLoadingLayout()) {
-					mFooterLayout.setWidth(maximumPullScroll);
-					pRight = -maximumPullScroll;
-				} else {
-					pRight = 0;
-				}
-				break;
+            case VERTICAL:
+                if (mMode.showHeaderLoadingLayout()) {
+                    measureView(mHeaderLayout);
+                    pTop = -mHeaderLayout.getMeasuredHeight();
+                } else {
+                    pTop = 0;
+                }
 
-			case VERTICAL:
-				if (mMode.showHeaderLoadingLayout()) {
-					mHeaderLayout.setHeight(maximumPullScroll);
-					pTop = -maximumPullScroll;
-				} else if (mMode.showGoogleStyle() && mWindowAttached == true ) {
-					/**
-					 * Set size of {@code GoogleStyleViewLayout} to ActionBar's size if {@code mSetGoogleViewLayoutSizeToActionbarHeight} is true
-					 * This code is a default action, but if you want to use custom size of {@code GoogleStyleViewLayout}, set {@code ptrSetGoogleViewLayoutSizeToActionbarHeight} to false in layout xml (but not recommended).
-					 */
-					if (mSetGoogleViewLayoutSizeToActionbarHeight == true) {
-						mGoogleStyleViewLayout.setHeight(mActionBarHeight);
-					}
+                if (mMode.showFooterLoadingLayout()) {
+                    measureView(mFooterLayout);
+                    pBottom = -mFooterLayout.getMeasuredHeight();
+                } else {
+                    pBottom = 0;
+                }
+                break;
+        }
 
-					pTop = 0;
-				} else {
-					pTop = 0;
-				}
+        if (DEBUG) {
+            Log.d(LOG_TAG, String.format("Setting Padding. L: %d, T: %d, R: %d, B: %d", pLeft, pTop, pRight, pBottom));
+        }
+        setPadding(pLeft, pTop, pRight, pBottom);
+    }
 
-				if (mMode.showFooterLoadingLayout()) {
-					mFooterLayout.setHeight(maximumPullScroll);
-					pBottom = -maximumPullScroll;
-				} else {
-					pBottom = 0;
-				}
-				break;
-		}
+    private void measureView(View child) {
+        ViewGroup.LayoutParams p = child.getLayoutParams();
+        if (p == null) {
+            p = new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        }
 
-		if (DEBUG) {
-			Log.d(LOG_TAG, String.format("Setting Padding. L: %d, T: %d, R: %d, B: %d", pLeft, pTop, pRight, pBottom));
-		}
-		setPadding(pLeft, pTop, pRight, pBottom);
-	}
+        int childWidthSpec = ViewGroup.getChildMeasureSpec(0, 0, p.width);
+        int lpHeight = p.height;
+        int childHeightSpec;
+        if (lpHeight > 0) {
+            childHeightSpec = MeasureSpec.makeMeasureSpec(lpHeight, MeasureSpec.EXACTLY);
+        } else {
+            childHeightSpec = MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED);
+        }
+        child.measure(childWidthSpec, childHeightSpec);
+    }
 
 	protected final void refreshRefreshableViewSize(int width, int height) {
 		// We need to set the Height of the Refreshable View to the same as
